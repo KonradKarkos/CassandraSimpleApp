@@ -1,0 +1,14 @@
+﻿namespace CassandraSimpleApp.Tools
+{
+    enum Statements
+    {
+        SELECT_ALL_FROM_PRODUCTS,
+        SELECT_ALL_FROM_PRODUCTS_WITH_CATEGORY,
+        UPDATE_PRODUCT_AMOUNT,
+        INSERT_PRODUCT_INTO_PRODUCTS,
+        INSERT_ORDER_INTO_ORDERS,
+        UPDATE_STATUS_ORDER,
+        SELECT_ORDER_FROM_ORDER,
+        DELETE_ORDER_FROM_ORDERS
+    }
+}
