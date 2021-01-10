@@ -23,7 +23,7 @@ namespace CassandraSimpleApp
             {
                 Console.Write("\nWybierz opcje wykonania się programu (wpisz liczbę i ewentualne parametry po spacjach):\n" +
                 "1. Wypisz produkty (dodatkowy parametr - kategoria)\n" +
-                "2. Zmień liczbę dostępnych produktów (parametry - ilość;kategoria;nazwa produktu)\n" +
+                "2. Zmień ilość dostępnych produktów (parametry - ilość;kategoria;nazwa produktu)\n" +
                 "3. Stwórz produkt (parametry - nazwa produktu;kategoria;ilość;cena)\n" +
                 "4. Zrealizuj zamówienie (parametry - nazwa klienta;ID zamówienia)\n" +
                 "5. Sprawdź zamówienie (parametry - nazwa klienta;ID zamówienia)\n" +
@@ -33,7 +33,8 @@ namespace CassandraSimpleApp
                 "9. Usuń produkt z koszyka (parametry - indeks)\n" +
                 "10. Przejrzyj koszyk\n" +
                 "11. Zamów zawartość koszyka.\n" +
-                "12. Własna komenda\n");
+                "12. Przeciąż produkty.\n" +
+                "13. Własna komenda\n");
                 Console.Write(">");
                 wholeCommand = Console.ReadLine().Split(';');
                 if (!Int32.TryParse(wholeCommand[0], out choosenCommand))
@@ -189,6 +190,10 @@ namespace CassandraSimpleApp
                             sessionManager.InvokeBatchStatement(shopCart.GetProducts(), shopCart.GetClient());
                             break;
                         case 12:
+                            OverloadGenerator overloadGenerator = new OverloadGenerator();
+                            overloadGenerator.StartOverload(5, 10, 6, 2);
+                            break;
+                        case 13:
                             Console.Write("Wpisz komendę CQL:\n>");
                             var rows = sessionManager.Invoke(Console.ReadLine());
                             foreach(var row in rows)

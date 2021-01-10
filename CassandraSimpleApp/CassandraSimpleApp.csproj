@@ -136,6 +136,7 @@
     <Compile Include="DBEntities\Product.cs" />
     <Compile Include="Tools\Client.cs" />
     <Compile Include="Tools\EntityMapper.cs" />
+    <Compile Include="Tools\OverloadGenerator.cs" />
     <Compile Include="Tools\SessionManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

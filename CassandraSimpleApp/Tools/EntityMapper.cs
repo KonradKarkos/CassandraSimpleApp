@@ -8,7 +8,7 @@ namespace CassandraSimpleApp.Tools
 {
     static class EntityMapper
     {
-        public static List<Product> ToProducts(RowSet sessionResult)
+        public static List<Product> ToProducts(IEnumerable<Row> sessionResult)
         {
             List<Product> products = new List<Product>();
             foreach(Row loadedProduct in sessionResult)
@@ -22,7 +22,7 @@ namespace CassandraSimpleApp.Tools
             }
             return products;
         }
-        public static List<Order> ToOrders(RowSet sessionResult)
+        public static List<Order> ToOrders(IEnumerable<Row> sessionResult)
         {
             List<Order> orders = new List<Order>();
             foreach(Row loadedOrder in sessionResult)
