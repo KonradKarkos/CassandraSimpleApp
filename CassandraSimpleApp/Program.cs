@@ -5,6 +5,7 @@ using Dse.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CassandraSimpleApp
 {
@@ -15,21 +16,26 @@ namespace CassandraSimpleApp
             int choosenCommand;
             string[] wholeCommand;
             SessionManager sessionManager = new SessionManager();
-            Console.Write("Wybierz opcje wykonania się programu (wpisz liczbę i ewentualne parametry po spacjach):\n" +
-                "1. Wypisz produkty (dodatkowy parametr - kategoria)\n" +
-                "2. Zmień liczbę dostępnych produktów (parametry - ilość, kategoria, nazwa produktu)\n" +
-                "3. Stwórz produkt (parametry - nazwa produktu, kategoria, ilość, cena)\n" +
-                "4. Stwórz zamówienie (parametry - nazwa klienta, nazwa produktu, nazwa kategorii, ilość, adres, cena)\n" +
-                "5. Zrealizuj zamówienie (parametry - nazwa klienta, data)\n" +
-                "6. Sprawdź zamówienie (parametry - nazwa klienta, data)\n" +
-                "7. Usuń zamówienie (parametry - nazwa klienta, data)\n" +
-                "8. Dodaj produkt do koszyka (parametry - nazwa produktu, nazwa kategorii, ilość, cena)\n" +
-                "9. Usuń produkt z koszyka (parametry - indeks)\n" +
-                "10. Przejrzyj koszyk\n" +
-                "11. Własna komenda");
+            ShopCart shopCart = new ShopCart();
+            string clientName;
+            string deliveryAddress;
             while (true)
             {
-                wholeCommand = Console.ReadLine().Split(' ');
+                Console.Write("\nWybierz opcje wykonania się programu (wpisz liczbę i ewentualne parametry po spacjach):\n" +
+                "1. Wypisz produkty (dodatkowy parametr - kategoria)\n" +
+                "2. Zmień liczbę dostępnych produktów (parametry - ilość;kategoria;nazwa produktu)\n" +
+                "3. Stwórz produkt (parametry - nazwa produktu;kategoria;ilość;cena)\n" +
+                "4. Zrealizuj zamówienie (parametry - nazwa klienta;ID zamówienia)\n" +
+                "5. Sprawdź zamówienie (parametry - nazwa klienta;ID zamówienia)\n" +
+                "6. Usuń zamówienie (parametry - nazwa klienta;ID zamówienia)\n" +
+                "7. Nadaj klienta dla koszyka\n" +
+                "8. Dodaj produkt do koszyka (parametry - nazwa produktu;nazwa kategorii;ilość;cena)\n" +
+                "9. Usuń produkt z koszyka (parametry - indeks)\n" +
+                "10. Przejrzyj koszyk\n" +
+                "11. Zamów zawartość koszyka.\n" +
+                "12. Własna komenda\n");
+                Console.Write(">");
+                wholeCommand = Console.ReadLine().Split(';');
                 if (!Int32.TryParse(wholeCommand[0], out choosenCommand))
                 {
                     Console.WriteLine("Błędne polecenie, spróbuj ponownie ;-)");
@@ -41,7 +47,7 @@ namespace CassandraSimpleApp
                         case 1:
                             if(wholeCommand.Length>1)
                             {
-                                List<Product> loadedProducts = RowSetMapper.ToProducts(sessionManager.Invoke(Statements.SELECT_ALL_FROM_PRODUCTS_WITH_CATEGORY, new object[] { wholeCommand[1] }));
+                                List<Product> loadedProducts = EntityMapper.ToProducts(sessionManager.Invoke(Statements.SELECT_ALL_FROM_PRODUCTS_WITH_CATEGORY, new object[] { wholeCommand[1] }));
                                 foreach(Product product in loadedProducts)
                                 {
                                     Console.WriteLine(product.ToString());
@@ -49,7 +55,7 @@ namespace CassandraSimpleApp
                             }
                             else
                             {
-                                List<Product> loadedProducts = RowSetMapper.ToProducts(sessionManager.Invoke(Statements.SELECT_ALL_FROM_PRODUCTS));
+                                List<Product> loadedProducts = EntityMapper.ToProducts(sessionManager.Invoke(Statements.SELECT_ALL_FROM_PRODUCTS));
                                 foreach (Product product in loadedProducts)
                                 {
                                     Console.WriteLine(product.ToString());
@@ -60,7 +66,8 @@ namespace CassandraSimpleApp
                             if (wholeCommand.Length == 4)
                             {
                                 object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
+                                Array.Copy(wholeCommand, 1, parameter, 0, wholeCommand.Length - 1);
+                                parameter[0] = Int32.Parse((string)parameter[0]);
                                 sessionManager.Invoke(Statements.UPDATE_PRODUCT_AMOUNT, parameter);
                             }
                             else
@@ -72,7 +79,9 @@ namespace CassandraSimpleApp
                             if (wholeCommand.Length == 5)
                             {
                                 object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
+                                Array.Copy(wholeCommand, 1, parameter, 0, wholeCommand.Length - 1);
+                                parameter[2] = Int32.Parse((string)parameter[2]);
+                                parameter[3] = Double.Parse((string)parameter[3]);
                                 sessionManager.Invoke(Statements.INSERT_PRODUCT_INTO_PRODUCTS, parameter);
                             }
                             else
@@ -81,11 +90,12 @@ namespace CassandraSimpleApp
                             }
                             break;
                         case 4:
-                            if (wholeCommand.Length == 7)
+                            if (wholeCommand.Length == 3)
                             {
                                 object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
-                                sessionManager.Invoke(Statements.INSERT_ORDER_INTO_ORDERS, parameter);
+                                Array.Copy(wholeCommand, 1, parameter, 0, wholeCommand.Length - 1);
+                                parameter[1] = Guid.Parse(wholeCommand[2]);
+                                sessionManager.InvokeUpdateOrder(parameter);
                             }
                             else
                             {
@@ -96,8 +106,12 @@ namespace CassandraSimpleApp
                             if (wholeCommand.Length == 3)
                             {
                                 object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
-                                sessionManager.Invoke(Statements.UPDATE_STATUS_ORDER, parameter);
+                                Array.Copy(wholeCommand, 1, parameter, 0, wholeCommand.Length - 1);
+                                parameter[1] = Guid.Parse(wholeCommand[2]);
+                                foreach(Order o in EntityMapper.ToOrders(sessionManager.Invoke(Statements.SELECT_ORDER_FROM_ORDER, parameter)))
+                                {
+                                    Console.WriteLine(o.ToString());
+                                }
                             }
                             else
                             {
@@ -108,8 +122,9 @@ namespace CassandraSimpleApp
                             if (wholeCommand.Length == 3)
                             {
                                 object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
-                                sessionManager.Invoke(Statements.SELECT_ORDER_FROM_ORDER, parameter);
+                                Array.Copy(wholeCommand, 1, parameter, 0, wholeCommand.Length - 1);
+                                parameter[1] = Guid.Parse(wholeCommand[2]);
+                                sessionManager.InvokeDeleteOrder(parameter);
                             }
                             else
                             {
@@ -117,26 +132,73 @@ namespace CassandraSimpleApp
                             }
                             break;
                         case 7:
-                            if (wholeCommand.Length == 3)
+                            Console.Write("Podaj nazwę klienta i adres dostawy:\n" +
+                                "Nazwa klienta:\n>");
+                            clientName = Console.ReadLine();
+                            Console.Write("Adres dostawy:\n>");
+                            deliveryAddress = Console.ReadLine();
+                            shopCart.SetClient(clientName, deliveryAddress);
+                            break;
+                        case 8:
+                            if (wholeCommand.Length == 5)
                             {
-                                object[] parameter = new object[wholeCommand.Length - 1];
-                                wholeCommand.CopyTo(parameter, 1);
-                                sessionManager.Invoke(Statements.INSERT_PRODUCT_INTO_PRODUCTS, parameter);
+                                try
+                                {
+                                    if(shopCart.IsClientEmpty())
+                                    {
+                                        Console.Write("Podaj nazwę klienta i adres dostawy:\n" +
+                                            "Nazwa klienta:\n>");
+                                        clientName = Console.ReadLine();
+                                        Console.Write("Adres dostawy:\n>");
+                                        deliveryAddress = Console.ReadLine();
+                                        shopCart.SetClient(clientName, deliveryAddress);
+                                    }
+                                    shopCart.AddToCart(EntityMapper.StringArrayToProduct(wholeCommand));
+                                }
+                                catch (FormatException)
+                                {
+                                    Console.WriteLine("Błędnie wywołana funkcja, spróbuj ponownie ;-)");
+                                }
                             }
                             else
                             {
-                                Console.WriteLine("Zła liczba parametrów");
+                                Console.WriteLine("Błędnie wywołana funkcja, spróbuj ponownie ;-)");
                             }
                             break;
-                        case 8:
-                            break;
                         case 9:
+                            if (wholeCommand.Length == 2)
+                            {
+                                try
+                                {
+                                    shopCart.RemoveFromCart(Int32.Parse(wholeCommand[1]));
+                                }
+                                catch (IndexOutOfRangeException)
+                                {
+                                    Console.WriteLine("Błędnie wywołana funkcja, spróbuj ponownie ;-)");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Błędnie wywołana funkcja, spróbuj ponownie ;-)");
+                            }
                             break;
                         case 10:
+                            shopCart.DisplayCart();
                             break;
                         case 11:
-                            Console.WriteLine("Wpisz komendę CQL:");
-                            sessionManager.Invoke(Console.ReadLine());
+                            sessionManager.InvokeBatchStatement(shopCart.GetProducts(), shopCart.GetClient());
+                            break;
+                        case 12:
+                            Console.Write("Wpisz komendę CQL:\n>");
+                            var rows = sessionManager.Invoke(Console.ReadLine());
+                            foreach(var row in rows)
+                            {
+                                for(int i=0;i< row.Length;i++)
+                                {
+                                    Console.Write(row.GetValue<object>(i) + " ");
+                                }
+                                Console.Write("\n");
+                            }
                             break;
                         default:
                             Console.WriteLine("Nie wykryto komendy.");

@@ -134,10 +134,12 @@
   <ItemGroup>
     <Compile Include="DBEntities\Order.cs" />
     <Compile Include="DBEntities\Product.cs" />
-    <Compile Include="Tools\RowSetMapper.cs" />
+    <Compile Include="Tools\Client.cs" />
+    <Compile Include="Tools\EntityMapper.cs" />
     <Compile Include="Tools\SessionManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tools\ShopCart.cs" />
     <Compile Include="Tools\Statements.cs" />
   </ItemGroup>
   <ItemGroup>
